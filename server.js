@@ -1,7 +1,7 @@
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid'); // Importing UUID generation function
 
-const wss = new WebSocket.Server({ port: 8080, host: '0.0.0.0' });
+const wss = new WebSocket.Server({ port: 8081, host: '0.0.0.0' });
 
 let clients = {};
 
@@ -10,32 +10,76 @@ wss.on('connection', function connection(ws) {
   ws.id = clientId; // Assign a unique id to the WebSocket connection
   clients[clientId] = ws; // Store the connection with its ID
 
-  console.log("Client connected: " + clientId);
+  for (let id in clients) {
+    if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
+      clients[id].send(connectMessage(ws.id));
+    }
+  }
 
   ws.on('message', function incoming(message) {
-     message = JSON.parse(message)
-     if(message.hasOwnProperty("username")) {
+    message = JSON.parse(message)
+
+    //! When connecting, the client sends a message automatically with a username field set by the client.
+    if (message.hasOwnProperty("username")) {
       ws.username = message.username;
-     }
-     console.log(ws.username)
-     message.from = ws.id;
-     message = JSON.stringify(message)
-     console.log(`Received message ${message} from client ${ws.id}`);
+      return;
+    }
+
     for (let id in clients) {
       if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
-        clients[id].send(message);
+
+        /*
+        TODO -- Here implement a switch case system in which different message types can be sent between clients. 
+        TODO -- The clients should denote the event type as their first parameter and accordingly different message formating functions can be build for each usecase
+        */
+        clients[id].send(generalMessage(ws.id, ws.username, message));
       }
     }
   });
 
+
   ws.on('close', () => {
+    //! When someone disconnects the others get info about it
+    for (let id in clients) {
+      if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
+        clients[id].send(disconnectMessage(ws.id, ws.username));
+      }
+    }
+
     delete clients[clientId]; // Remove client from the list upon disconnection
     console.log("Client disconnected: " + clientId);
   });
+
+
 
   ws.on('error', (error) => {
     console.error(`Client ${clientId} error: ${error}`);
   });
 });
 
-console.log("WebSocket server started on ws://localhost:8080");
+function connectMessage(id) {
+  const connectMessage = {
+    event: "connect",
+    id: id
+  };
+  return JSON.stringify(connectMessage)
+}
+
+function generalMessage(id, username, message) {
+  const generalMessage = {
+    event: "message",
+    username: username,
+    id: id,
+    message: message.message,
+  };
+  return JSON.stringify(generalMessage)
+}
+
+function disconnectMessage(id, username) {
+  const disconnectMessage = {
+    event: "disconnect",
+    username: username,
+    id: id
+  };
+  return JSON.stringify(disconnectMessage)
+}
