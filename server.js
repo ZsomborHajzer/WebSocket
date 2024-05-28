@@ -2,6 +2,7 @@ const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid'); // Importing UUID generation function
 
 const wss = new WebSocket.Server({ port: 8081, host: '0.0.0.0' });
+console.log("Server is running on port 8081")
 
 let clients = {};
 
