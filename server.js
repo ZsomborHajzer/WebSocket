@@ -27,7 +27,10 @@ wss.on('connection', function connection(ws) {
   clients[clientId] = ws; // Store the connection with its ID and role
 
   handleNewConnection(ws);
-  sendCurrentPlayers(ws);
+  
+  if (Object.keys(clients).length > 1) {
+    sendCurrentPlayers(ws);
+  }
 
   ws.on('message', function incoming(message) {
     handleMessage(ws, message);
@@ -43,9 +46,6 @@ wss.on('connection', function connection(ws) {
 });
 
 function handleNewConnection(ws) {
-  // Notify the newly connected client about their role
-  ws.send(connectMessage(ws.id, ws.username, ws.role));
-
   // Notify all other clients about the new connection
   notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
 }
@@ -61,6 +61,7 @@ function handleMessage(ws, message) {
 
   if (message.hasOwnProperty("username")) {
     ws.username = message.username;
+    // Notify the newly connected client about their username and role
     ws.send(connectMessage(ws.id, ws.username, ws.role));
     return;
   }
