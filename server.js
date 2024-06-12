@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid'); // Importing UUID generation function
 const wss = new WebSocket.Server({ port: 8081, host: '0.0.0.0' });
 console.log("Server is running on port 8081");
 
-//! MAKE SURE THE SESSION ENDS BOTH WHEN THE ALL THE USERS DISCONNECT
+//! MAKE SURE THE SESSION ENDS BOTH WHEN ALL THE USERS DISCONNECT
 //! OR WHEN THE GAME ENDS
 
 //! A SESSION is started when the start game message is prompted.
@@ -33,21 +33,15 @@ wss.on('connection', function connection(ws) {
   clients[clientId] = ws; // Store the connection with its ID and role
 
   // Notify the newly connected client about their role
+  ws.send(connectMessage(ws.id, ws.username, ws.role));
 
-
-  //if there are multiple clients already, send the client information of previous connections to the current one.
-  if (clients.size > 1) {
-    for (let id in clients) {
-      if(clients[id] !== ws && clients[id].readyState === WebSocket.OPEN){
-        ws.send(connectMessage(ws.id, ws.username, ws.role))
-      }
-    }
-  }
+  // Send information of all previously connected clients to the newly connected client
+  ws.send(currentPlayers(clients));
 
   // Notify all other clients about the new connection
   for (let id in clients) {
     if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
-      clients[id].send(connectMessage(ws.id, ws.role));
+      clients[id].send(connectMessage(ws.id, ws.username, ws.role));
     }
   }
 
@@ -129,14 +123,21 @@ function connectMessage(id, username, role) {
   return JSON.stringify(connectMessage);
 }
 
-function otherUsersConnected(id, username, role) {
-  const connectMessage = {
-    event: "otherUsersConnected",
-    id: id,
-    username: username,
-    role: role
+function currentPlayers(clients) {
+  let currentPlayersMessage = {
+    event: "currentPlayers",
+    players: []
   };
-  return JSON.stringify(connectMessage);
+
+  for (let id in clients) {
+    currentPlayersMessage.players.push({
+      id: clients[id].id,
+      username: clients[id].username,
+      role: clients[id].role
+    });
+  }
+
+  return JSON.stringify(currentPlayersMessage);
 }
 
 function generalMessage(id, username, role, message) {
@@ -204,15 +205,4 @@ function endTurnMessage(id, username, role, message) {
     timeStamp: message.timeStamp
   };
   return JSON.stringify(endTurnMessage);
-}
-
-function currentPlayers(clients) {
-let currentPlayersMessage = {}
-clients.forEach(client => {
-  client.id = {
-    name: client.name,
-    score: client.score,
-  }
-});
-
 }
