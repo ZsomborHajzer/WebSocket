@@ -4,11 +4,6 @@ const { v4: uuidv4 } = require('uuid'); // Importing UUID generation function
 const wss = new WebSocket.Server({ port: 8081, host: '0.0.0.0' });
 console.log("Server is running on port 8081");
 
-//! MAKE SURE THE SESSION ENDS BOTH WHEN ALL THE USERS DISCONNECT
-//! OR WHEN THE GAME ENDS
-
-//! A SESSION is started when the start game message is prompted.
-
 let clients = {};
 let roles = ["player1", "player2", "player3", "player4"];
 let availableRoles = [...roles]; // Clone the roles array to manage availability
@@ -25,83 +20,100 @@ wss.on('connection', function connection(ws) {
   }
 
   if (!sessionActive) {
-    availableRoles = [...roles]; // Reset roles for a new session
-    sessionActive = true;
+    startSession();
   }
 
   ws.role = availableRoles.shift(); // Assign the next available role
   clients[clientId] = ws; // Store the connection with its ID and role
 
-  // Notify the newly connected client about their role
-  ws.send(connectMessage(ws.id, ws.username, ws.role));
-
-  // Send information of all previously connected clients to the newly connected client
-  ws.send(currentPlayers(clients));
-
-  // Notify all other clients about the new connection
-  for (let id in clients) {
-    if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
-      clients[id].send(connectMessage(ws.id, ws.username, ws.role));
-    }
-  }
+  handleNewConnection(ws);
+  sendCurrentPlayers(ws);
 
   ws.on('message', function incoming(message) {
-    message = JSON.parse(message);
-    console.log(message);
-
-    if (message.hasOwnProperty("username")) {
-      ws.username = message.username;
-      ws.send(connectMessage(ws.id, ws.username, ws.role));
-      return;
-    }
-
-    for (let id in clients) {
-      if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
-        switch (message.event) {
-          case "endGame":
-            clients[id].send(endGameMessage(ws.id, ws.username, ws.role, message));
-            endSession(); // End the session when the game ends
-            break;
-          case "endTurn":
-            clients[id].send(endTurnMessage(ws.id, ws.username, ws.role, message));
-            break;
-          case "moveAction":
-            clients[id].send(moveActionMessage(ws.id, ws.username, ws.role, message));
-            break;
-          case "startGame":
-            clients[id].send(startGameMessage(ws.id, ws.username, ws.role, message));
-            startSession();
-            break;
-          default:
-            clients[id].send(generalMessage(ws.id, ws.username, ws.role, message));
-            break;
-        }
-        return;
-      }
-    }
+    handleMessage(ws, message);
   });
 
   ws.on('close', () => {
-    //! When someone disconnects the others get info about it
-    for (let id in clients) {
-      if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
-        clients[id].send(disconnectMessage(ws.id, ws.username, ws.role));
-      }
-    }
-
-    delete clients[clientId]; // Remove client from the list upon disconnection
-    console.log("Client disconnected: " + clientId);
-
-    // End the session if no players are left
-    if (Object.keys(clients).length === 0) {
-      endSession();
-    }
+    handleDisconnection(ws);
   });
 
   ws.on('error', (error) => {
     console.error(`Client ${clientId} error: ${error}`);
   });
 });
+
+function handleNewConnection(ws) {
+  // Notify the newly connected client about their role
+  ws.send(connectMessage(ws.id, ws.username, ws.role));
+
+  // Notify all other clients about the new connection
+  notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
+}
+
+function sendCurrentPlayers(ws) {
+  // Send information of all previously connected clients to the newly connected client
+  ws.send(currentPlayers(clients));
+}
+
+function handleMessage(ws, message) {
+  message = JSON.parse(message);
+  console.log(message);
+
+  if (message.hasOwnProperty("username")) {
+    ws.username = message.username;
+    ws.send(connectMessage(ws.id, ws.username, ws.role));
+    return;
+  }
+
+  for (let id in clients) {
+    if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
+      handleClientEvent(ws, clients[id], message);
+    }
+  }
+}
+
+function handleClientEvent(senderWs, clientWs, message) {
+  switch (message.event) {
+    case "endGame":
+      clientWs.send(endGameMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      endSession(); // End the session when the game ends
+      break;
+    case "endTurn":
+      clientWs.send(endTurnMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      break;
+    case "moveAction":
+      clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      break;
+    case "startGame":
+      clientWs.send(startGameMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      startSession();
+      break;
+    default:
+      clientWs.send(generalMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      break;
+  }
+}
+
+function handleDisconnection(ws) {
+  // Notify other clients about the disconnection
+  notifyAllClientsExcept(ws, disconnectMessage(ws.id, ws.username, ws.role));
+
+  delete clients[ws.id]; // Remove client from the list upon disconnection
+  console.log("Client disconnected: " + ws.id);
+
+  // End the session if no players are left
+  if (Object.keys(clients).length === 0) {
+    endSession();
+  }
+}
+
+function notifyAllClientsExcept(excludedWs, message) {
+  for (let id in clients) {
+    if (clients[id] !== excludedWs && clients[id].readyState === WebSocket.OPEN) {
+      clients[id].send(message);
+    }
+  }
+}
 
 function endSession() {
   sessionActive = false;
@@ -114,13 +126,12 @@ function startSession() {
 }
 
 function connectMessage(id, username, role) {
-  const connectMessage = {
+  return JSON.stringify({
     event: "connect",
     id: id,
     username: username,
     role: role
-  };
-  return JSON.stringify(connectMessage);
+  });
 }
 
 function currentPlayers(clients) {
@@ -141,50 +152,46 @@ function currentPlayers(clients) {
 }
 
 function generalMessage(id, username, role, message) {
-  const generalMessage = {
+  return JSON.stringify({
     event: "message",
     username: username,
     id: id,
     role: role,
     message: message.message,
-  };
-  return JSON.stringify(generalMessage);
+  });
 }
 
 function disconnectMessage(id, username, role) {
-  const disconnectMessage = {
+  return JSON.stringify({
     event: "disconnect",
     username: username,
     id: id,
     role: role
-  };
-  return JSON.stringify(disconnectMessage);
+  });
 }
 
 function endGameMessage(id, username, role, message) {
-  const endGameMessage = {
+  return JSON.stringify({
     event: message.event,
     username: username,
     id: id,
     role: role,
     timeStamp: message.timeStamp
-  };
-  return JSON.stringify(endGameMessage);
+  });
 }
 
 function startGameMessage(id, username, role, message) {
-  const startGameMessage = {
+  return JSON.stringify({
     event: message.event,
     username: username,
     id: id,
     role: role,
     timeStamp: message.timeStamp
-  };
-  return JSON.stringify(startGameMessage);
+  });
 }
 
 function moveActionMessage(id, username, role, message) {
-  const moveActionMessage = {
+  return JSON.stringify({
     event: message.event,
     username: username,
     id: id,
@@ -192,17 +199,15 @@ function moveActionMessage(id, username, role, message) {
     fromPosition: message.fromPosition,
     toPosition: message.toPosition,
     timeStamp: message.timeStamp
-  };
-  return JSON.stringify(moveActionMessage);
+  });
 }
 
 function endTurnMessage(id, username, role, message) {
-  const endTurnMessage = {
+  return JSON.stringify({
     event: message.event,
     username: username,
     id: id,
     role: role,
     timeStamp: message.timeStamp
-  };
-  return JSON.stringify(endTurnMessage);
+  });
 }
