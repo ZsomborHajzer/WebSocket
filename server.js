@@ -4,6 +4,11 @@ const { v4: uuidv4 } = require('uuid'); // Importing UUID generation function
 const wss = new WebSocket.Server({ port: 8081, host: '0.0.0.0' });
 console.log("Server is running on port 8081");
 
+//! MAKE SURE THE SESSION ENDS BOTH WHEN THE ALL THE USERS DISCONNECT
+//! OR WHEN THE GAME ENDS
+
+//! A SESSION is started when the start game message is prompted.
+
 let clients = {};
 let roles = ["player1", "player2", "player3", "player4"];
 let availableRoles = [...roles]; // Clone the roles array to manage availability
@@ -28,7 +33,16 @@ wss.on('connection', function connection(ws) {
   clients[clientId] = ws; // Store the connection with its ID and role
 
   // Notify the newly connected client about their role
-  ws.send(connectMessage(ws.id, ws.role));
+
+
+  //if there are multiple clients already, send the client information of previous connections to the current one.
+  if (clients.size > 1) {
+    for (let id in clients) {
+      if(clients[id] !== ws && clients[id].readyState === WebSocket.OPEN){
+        ws.send(connectMessage(ws.id, ws.username, ws.role))
+      }
+    }
+  }
 
   // Notify all other clients about the new connection
   for (let id in clients) {
@@ -43,6 +57,7 @@ wss.on('connection', function connection(ws) {
 
     if (message.hasOwnProperty("username")) {
       ws.username = message.username;
+      ws.send(connectMessage(ws.id, ws.username, ws.role));
       return;
     }
 
@@ -61,6 +76,7 @@ wss.on('connection', function connection(ws) {
             break;
           case "startGame":
             clients[id].send(startGameMessage(ws.id, ws.username, ws.role, message));
+            startSession();
             break;
           default:
             clients[id].send(generalMessage(ws.id, ws.username, ws.role, message));
@@ -79,8 +95,6 @@ wss.on('connection', function connection(ws) {
       }
     }
 
-    // Mark the role as available again
-    availableRoles.push(ws.role);
     delete clients[clientId]; // Remove client from the list upon disconnection
     console.log("Client disconnected: " + clientId);
 
@@ -101,10 +115,25 @@ function endSession() {
   console.log("Session ended and roles reset");
 }
 
-function connectMessage(id, role) {
+function startSession() {
+  sessionActive = true;
+}
+
+function connectMessage(id, username, role) {
   const connectMessage = {
     event: "connect",
     id: id,
+    username: username,
+    role: role
+  };
+  return JSON.stringify(connectMessage);
+}
+
+function otherUsersConnected(id, username, role) {
+  const connectMessage = {
+    event: "otherUsersConnected",
+    id: id,
+    username: username,
     role: role
   };
   return JSON.stringify(connectMessage);
@@ -175,4 +204,15 @@ function endTurnMessage(id, username, role, message) {
     timeStamp: message.timeStamp
   };
   return JSON.stringify(endTurnMessage);
+}
+
+function currentPlayers(clients) {
+let currentPlayersMessage = {}
+clients.forEach(client => {
+  client.id = {
+    name: client.name,
+    score: client.score,
+  }
+});
+
 }
