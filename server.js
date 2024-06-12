@@ -52,7 +52,7 @@ function handleNewConnection(ws) {
 
 function sendCurrentPlayers(ws) {
   // Send information of all previously connected clients to the newly connected client
-  ws.send(currentPlayers(clients));
+  ws.send(currentPlayers(clients, ws.id));
 }
 
 function handleMessage(ws, message) {
@@ -134,18 +134,20 @@ function connectMessage(id, username, role) {
   });
 }
 
-function currentPlayers(clients) {
+function currentPlayers(clients, excludeId) {
   let currentPlayersMessage = {
     event: "currentPlayers",
     players: []
   };
 
   for (let id in clients) {
-    currentPlayersMessage.players.push({
-      id: clients[id].id,
-      username: clients[id].username,
-      role: clients[id].role
-    });
+    if (id !== excludeId) {
+      currentPlayersMessage.players.push({
+        id: clients[id].id,
+        username: clients[id].username,
+        role: clients[id].role
+      });
+    }
   }
 
   return JSON.stringify(currentPlayersMessage);
