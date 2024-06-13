@@ -26,12 +26,6 @@ wss.on('connection', function connection(ws) {
   ws.role = availableRoles.shift(); // Assign the next available role
   clients[clientId] = ws; // Store the connection with its ID and role
 
-  handleNewConnection(ws);
-  
-  if (Object.keys(clients).length > 1) {
-    sendCurrentPlayers(ws);
-  }
-
   ws.on('message', function incoming(message) {
     handleMessage(ws, message);
   });
@@ -43,17 +37,11 @@ wss.on('connection', function connection(ws) {
   ws.on('error', (error) => {
     console.error(`Client ${clientId} error: ${error}`);
   });
+
+  if (Object.keys(clients).length > 1) {
+    sendCurrentPlayers(ws);
+  }
 });
-
-function handleNewConnection(ws) {
-  // Notify all other clients about the new connection
-  notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
-}
-
-function sendCurrentPlayers(ws) {
-  // Send information of all previously connected clients to the newly connected client
-  ws.send(currentPlayers(clients, ws.id));
-}
 
 function handleMessage(ws, message) {
   message = JSON.parse(message);
@@ -63,6 +51,8 @@ function handleMessage(ws, message) {
     ws.username = message.username;
     // Notify the newly connected client about their username and role
     ws.send(connectMessage(ws.id, ws.username, ws.role));
+    // Notify all other clients about the new connection
+    notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
     return;
   }
 
@@ -105,6 +95,8 @@ function handleDisconnection(ws) {
   // End the session if no players are left
   if (Object.keys(clients).length === 0) {
     endSession();
+  } else {
+    availableRoles.push(ws.role); // Make the role available again
   }
 }
 
