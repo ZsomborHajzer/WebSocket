@@ -128,6 +128,12 @@ function startSession() {
   console.log("Session started");
 }
 
+function sendCurrentPlayers(ws) {
+  console.log(`Sending current players to client ${ws.id}`);
+  let currentPlayersMessage = currentPlayers(clients, ws.id);
+  ws.send(currentPlayersMessage);
+}
+
 function connectMessage(id, username, role) {
   console.log(`Creating connect message for client ${id}`);
   return JSON.stringify({
