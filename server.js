@@ -83,6 +83,12 @@ function handleClientEvent(senderWs, clientWs, message) {
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
     case "startGame":
+      //! fix this
+      for (let id in clients) {
+        if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
+          handleClientEvent(ws, clients[id], message);
+        }
+      }
       senderWs.send(startGameMessage(message));
       clientWs.send(startGameMessage(message));
       autoStartTurn();
