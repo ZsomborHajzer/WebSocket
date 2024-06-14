@@ -8,6 +8,7 @@ let clients = {};
 let roles = ["player1", "player2", "player3", "player4"];
 let availableRoles = [...roles]; // Clone the roles array to manage availability
 let sessionActive = false;
+let currentClientIndex = 0
 
 wss.on('connection', function connection(ws) {
   const clientId = uuidv4();
@@ -82,12 +83,22 @@ function handleClientEvent(senderWs, clientWs, message) {
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
     case "startGame":
-      clientWs.send(startGameMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      senderWs.send(startGameMessage(message));
+      clientWs.send(startGameMessage(message));
+      autoStartTurn();
       startSession();
       break;
     default:
       clientWs.send(generalMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
+  }
+}
+
+function autoStartTurn(){
+  clientWs.startTurnMessage(clients[currentClientIndex].id,clients[currentClientIndex].username,clients[currentClientIndex].role)
+  currentClientIndex++;
+  if(currentClientIndex >= clients.size){
+    currentClientIndex = 0;
   }
 }
 
@@ -196,13 +207,10 @@ function endGameMessage(id, username, role, message) {
   });
 }
 
-function startGameMessage(id, username, role, message) {
-  console.log(`Creating start game message from client ${id}`);
+function startGameMessage(message) {
+  console.log(`The game has been started at ${MediaSession.timeStamp}`);
   return JSON.stringify({
     event: message.event,
-    username: username,
-    id: id,
-    role: role,
     timeStamp: message.timeStamp
   });
 }
@@ -230,3 +238,13 @@ function endTurnMessage(id, username, role, message) {
     timeStamp: message.timeStamp
   });
 }
+
+function startTurnMessage(id, username, role) {
+  console.log(`Creating start turn message from client ${id}`);
+  return JSON.stringify({
+    event: "startTurn",
+    username: username,
+    id: id,
+    role: role
+  });
+  }
