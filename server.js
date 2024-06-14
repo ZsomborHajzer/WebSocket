@@ -87,7 +87,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       break;
     case "startGame":
       console.log("4")
-      print(`${message}, startgame switch case has been triggered`)
+      console.log(`${message}, startgame switch case has been triggered`)
       senderWs.send(startGameMessage(message));
       clientWs.send(startGameMessage(message));
       autoStartTurn();
