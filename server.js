@@ -61,7 +61,7 @@ function handleMessage(ws, message) {
     notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
     return;
   }
-  notifyAllClients(message)
+  notifyAllClients(ws, message)
 }
 
 function handleClientEvent(senderWs, clientWs, message) {
@@ -125,7 +125,7 @@ function notifyAllClientsExcept(excludedWs, message) {
   }
 }
 
-function notifyAllClients(message) {
+function notifyAllClients(ws, message) {
   for (let id in clients) {
       handleClientEvent(ws, clients[id], message);
   }
