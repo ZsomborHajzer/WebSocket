@@ -212,10 +212,14 @@ function startGameMessage(message) {
   console.log(`The game has been started at ${message.timeStamp}`);
 
   listOfClients = []
-  for (let client in clients) {
-    listOfClients.push(client)
+  for (let id in clients) {
+    listOfClients.push({
+      id: clients[id].id,
+      username: clients[id].username,
+      role: clients[id].role
+    })
   }
-
+  
   return JSON.stringify({
     event: message.event,
     timeStamp: message.timeStamp,
