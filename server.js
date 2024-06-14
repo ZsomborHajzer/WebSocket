@@ -63,7 +63,7 @@ function handleMessage(ws, message) {
   }
 
   if (message.event == "startGame") {
-    print("Start Game function inside handle message has been called")
+    console.log("Start Game function inside handle message has been called")
     notifyAllClients(message)
     return
   }
