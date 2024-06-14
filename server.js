@@ -78,9 +78,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
     case "startGame":
-      console.log("4")
       console.log(`${message}, startgame switch case has been triggered`)
-      senderWs.send(startGameMessage(message));
       clientWs.send(startGameMessage(message));
       autoStartTurn();
       startSession();
@@ -91,10 +89,10 @@ function handleClientEvent(senderWs, clientWs, message) {
   }
 }
 
-function autoStartTurn(){
-  clientWs.startTurnMessage(clients[currentClientIndex].id,clients[currentClientIndex].username,clients[currentClientIndex].role)
+function autoStartTurn() {
+  clientWs.startTurnMessage(clients[currentClientIndex].id, clients[currentClientIndex].username, clients[currentClientIndex].role)
   currentClientIndex++;
-  if(currentClientIndex >= clients.size){
+  if (currentClientIndex >= clients.size) {
     currentClientIndex = 0;
   }
 }
@@ -127,7 +125,7 @@ function notifyAllClientsExcept(excludedWs, message) {
 
 function notifyAllClients(ws, message) {
   for (let id in clients) {
-      handleClientEvent(ws, clients[id], message);
+    handleClientEvent(ws, clients[id], message);
   }
 }
 
@@ -212,9 +210,16 @@ function endGameMessage(id, username, role, message) {
 
 function startGameMessage(message) {
   console.log(`The game has been started at ${message.timeStamp}`);
+
+  listOfClients = []
+  for (let client in clients) {
+    listOfClients.push(client)
+  }
+
   return JSON.stringify({
     event: message.event,
-    timeStamp: message.timeStamp
+    timeStamp: message.timeStamp,
+    clients: listOfClients
   });
 }
 
@@ -250,4 +255,6 @@ function startTurnMessage(id, username, role) {
     id: id,
     role: role
   });
-  }
+
+}
+
