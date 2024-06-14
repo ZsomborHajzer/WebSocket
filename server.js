@@ -101,8 +101,8 @@ function handleClientEvent(senderWs, clientWs, message) {
 function onInitializationRequest(){
   console.log("A player has been initialized")
   clientsInitialized++
-  console.log(`Clients Initialized = ${clientsInitialized}, Clients.size = ${clients.size} `)
-  if(clientsInitialized == clients.size){
+  console.log(`Clients Initialized = ${clientsInitialized}, Clients.size = ${Object.keys(clients).length} `)
+  if(clientsInitialized == Object.keys(clients).length){
     autoStartTurn();
   }
 }
@@ -112,7 +112,7 @@ function autoStartTurn() {
   console.log("AutoStartTurn Has been Called!!!")
   clientWs.startTurnMessage(clients[currentClientIndex].id, clients[currentClientIndex].username, clients[currentClientIndex].role)
   currentClientIndex++;
-  if (currentClientIndex >= clients.size) {
+  if (currentClientIndex >= Object.keys(clients).length) {
     currentClientIndex = 0;
   }
 }
