@@ -62,13 +62,14 @@ function handleMessage(ws, message) {
     return;
   }
 
-  if (message.event == "startGame") {
-    console.log("Start Game function inside handle message has been called")
-    notifyAllClients(message)
-    return
+  console.log("1")
+  for (let id in clients) {
+    console.log("2")
+    if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
+      console.log("3")
+      handleClientEvent(ws, clients[id], message);
+    }
   }
-
-  notifyAllClientsExcept(ws, message)
 }
 
 function handleClientEvent(senderWs, clientWs, message) {
@@ -85,6 +86,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
     case "startGame":
+      console.log("4")
       print(`${message}, startgame switch case has been triggered`)
       senderWs.send(startGameMessage(message));
       clientWs.send(startGameMessage(message));
@@ -126,15 +128,6 @@ function notifyAllClientsExcept(excludedWs, message) {
   console.log(`Notifying all clients except client ${excludedWs.id}`);
   for (let id in clients) {
     if (clients[id] !== excludedWs && clients[id].readyState === WebSocket.OPEN) {
-      clients[id].send(message);
-    }
-  }
-}
-
-function notifyAllClients(message) {
-  console.log(`Notifying all clients`);
-  for (let id in clients) {
-    if (clients[id].readyState === WebSocket.OPEN) {
       clients[id].send(message);
     }
   }
