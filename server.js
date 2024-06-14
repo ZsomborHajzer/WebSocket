@@ -213,8 +213,7 @@ function startGameMessage(message) {
 
   listOfClients = []
   for (let client in clients) {
-   let wsClient = ws[client]
-    listOfClients.push(wsClient)
+    listOfClients.push(client)
   }
 
   return JSON.stringify({
