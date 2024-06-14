@@ -110,12 +110,21 @@ function onInitializationRequest(){
 
 function autoStartTurn() {
   console.log("AutoStartTurn Has been Called!!!")
-  clientWs.startTurnMessage(clients[currentClientIndex].id, clients[currentClientIndex].username, clients[currentClientIndex].role)
+  startTurnMessage(
+    Object.keys(clients)[currentClientIndex]
+  )
   currentClientIndex++;
   if (currentClientIndex >= Object.keys(clients).length) {
     currentClientIndex = 0;
   }
 }
+
+function startTurnMessage(clientId) {
+  console.log(`Creating start turn message from client ${clientId}`);
+  return JSON.stringify({
+    event: "startTurn",
+    id: clientId
+  });
 
 function handleDisconnection(ws) {
   // Notify other clients about the disconnection
@@ -271,14 +280,7 @@ function endTurnMessage(id, username, role, message) {
   });
 }
 
-function startTurnMessage(id, username, role) {
-  console.log(`Creating start turn message from client ${id}`);
-  return JSON.stringify({
-    event: "startTurn",
-    username: username,
-    id: id,
-    role: role
-  });
+
 
 
 }
