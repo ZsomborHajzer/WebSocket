@@ -101,6 +101,7 @@ function handleClientEvent(senderWs, clientWs, message) {
 function onInitializationRequest(){
   console.log("A player has been initialized")
   clientsInitialized++
+  console.log(`Clients Initialized = ${clientsInitialized}, Clients.size = ${clients.size} `)
   if(clientsInitialized == clients.size){
     autoStartTurn();
   }
