@@ -124,7 +124,8 @@ function startTurnMessage(clientId) {
   return JSON.stringify({
     event: "startTurn",
     id: clientId
-  });
+  })
+}
 
 function handleDisconnection(ws) {
   // Notify other clients about the disconnection
@@ -280,8 +281,4 @@ function endTurnMessage(id, username, role, message) {
   });
 }
 
-
-
-
-}
 
