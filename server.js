@@ -9,6 +9,7 @@ let roles = ["player1", "player2", "player3", "player4"];
 let availableRoles = [...roles]; // Clone the roles array to manage availability
 let sessionActive = false;
 let currentClientIndex = 0
+let clientsInitialized = 0
 
 wss.on('connection', function connection(ws) {
   const clientId = uuidv4();
@@ -65,6 +66,10 @@ function handleMessage(ws, message) {
 }
 
 function handleClientEvent(senderWs, clientWs, message) {
+
+  let isAllPlayersInitialized = false
+  let initializedNumPlayers = 0
+
   console.log(`Handling event ${message.event} from client ${senderWs.id} to client ${clientWs.id}`);
   switch (message.event) {
     case "endGame":
@@ -80,16 +85,30 @@ function handleClientEvent(senderWs, clientWs, message) {
     case "startGame":
       console.log(`${message}, startgame switch case has been triggered`)
       clientWs.send(startGameMessage(message));
-      //autoStartTurn();
+      //TODO a function all to see if n initialization messages have been recieved
       startSession();
       break;
+    case "initialization":
+      onInitializationRequest()
+      break;
+
     default:
       clientWs.send(generalMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
   }
 }
 
+function onInitializationRequest(){
+  console.log("A player has been initialized")
+  clientsInitialized++
+  if(clientsInitialized == clients.size){
+    autoStartTurn();
+  }
+}
+
+
 function autoStartTurn() {
+  console.log("AutoStartTurn Has been Called!!!")
   clientWs.startTurnMessage(clients[currentClientIndex].id, clients[currentClientIndex].username, clients[currentClientIndex].role)
   currentClientIndex++;
   if (currentClientIndex >= clients.size) {
@@ -219,7 +238,7 @@ function startGameMessage(message) {
       role: clients[id].role
     })
   }
-  
+
   return JSON.stringify({
     event: message.event,
     timeStamp: message.timeStamp,
@@ -259,6 +278,7 @@ function startTurnMessage(id, username, role) {
     id: id,
     role: role
   });
+
 
 }
 
