@@ -61,15 +61,7 @@ function handleMessage(ws, message) {
     notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
     return;
   }
-
-  console.log("1")
-  for (let id in clients) {
-    console.log("2")
-    if (clients[id] !== ws && clients[id].readyState === WebSocket.OPEN) {
-      console.log("3")
-      handleClientEvent(ws, clients[id], message);
-    }
-  }
+  notifyAllClients(message)
 }
 
 function handleClientEvent(senderWs, clientWs, message) {
@@ -130,6 +122,12 @@ function notifyAllClientsExcept(excludedWs, message) {
     if (clients[id] !== excludedWs && clients[id].readyState === WebSocket.OPEN) {
       clients[id].send(message);
     }
+  }
+}
+
+function notifyAllClients(message) {
+  for (let id in clients) {
+      handleClientEvent(ws, clients[id], message);
   }
 }
 
