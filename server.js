@@ -213,7 +213,7 @@ function endGameMessage(id, username, role, message) {
 }
 
 function startGameMessage(message) {
-  console.log(`The game has been started at ${MediaSession.timeStamp}`);
+  console.log(`The game has been started at ${message.timeStamp}`);
   return JSON.stringify({
     event: message.event,
     timeStamp: message.timeStamp
