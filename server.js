@@ -80,7 +80,7 @@ function handleClientEvent(senderWs, clientWs, message) {
     case "startGame":
       console.log(`${message}, startgame switch case has been triggered`)
       clientWs.send(startGameMessage(message));
-      autoStartTurn();
+      //autoStartTurn();
       startSession();
       break;
     default:
@@ -213,7 +213,8 @@ function startGameMessage(message) {
 
   listOfClients = []
   for (let client in clients) {
-    listOfClients.push(client)
+   let wsClient = ws[client]
+    listOfClients.push(wsClient)
   }
 
   return JSON.stringify({
