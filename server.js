@@ -110,7 +110,7 @@ function onInitializationRequest(){
 
 function autoStartTurn() {
   console.log("AutoStartTurn Has been Called!!!")
-  startTurnMessage(
+  sendStartTurnMessage(
     Object.keys(clients)[currentClientIndex]
   )
   currentClientIndex++;
@@ -119,8 +119,13 @@ function autoStartTurn() {
   }
 }
 
-function startTurnMessage(clientId) {
+function sendStartTurnMessage(clientId) {
   console.log(`Creating start turn message from client ${clientId}`);
+  let message = createStartTurnMessage(clientId)
+  notifyAllClients(ws, message)
+}
+
+function createStartTurnMessage(clientId){
   return JSON.stringify({
     event: "startTurn",
     id: clientId
