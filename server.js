@@ -122,7 +122,7 @@ function autoStartTurn() {
 function sendStartTurnMessage(clientId) {
   console.log(`Creating start turn message from client ${clientId}`);
   let message = createStartTurnMessage(clientId)
-  notifyAllClients(ws, message)
+  notifyAllClients(wss, message)
 }
 
 function createStartTurnMessage(clientId){
