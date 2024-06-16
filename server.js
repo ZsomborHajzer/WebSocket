@@ -62,20 +62,13 @@ function handleMessage(ws, message) {
     notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
     return;
   }
-  notifyAllClients(ws, message)
+  handleClientEvent()
 }
 
-function handleClientEvent(senderWs, clientWs, message) {
+function handleClientEvent(senderWs, message) {
 
-  let isAllPlayersInitialized = false
-  let initializedNumPlayers = 0
-
-  console.log(`Handling event ${message.event} from client ${senderWs.id} to client ${clientWs.id}`);
+  console.log(`Handling event ${message.event} from client ${senderWs.id}`);
   switch (message.event) {
-    case "endGame":
-      clientWs.send(endGameMessage(senderWs.id, senderWs.username, senderWs.role, message));
-      endSession(); // End the session when the game ends
-      break;
     case "endTurn":
       onEndTurn()
       break;
