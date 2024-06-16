@@ -92,7 +92,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       onInitializationRequest()
       break;
 
-    case "MovementRollResult":
+    case "movementRollResult":
       onCharacterMoveRoll(message.result)
 
     default:
