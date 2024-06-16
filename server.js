@@ -73,12 +73,11 @@ function handleClientEvent(senderWs, message) {
       onEndTurn()
       break;
     case "moveAction":
-      clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      sendToAllClients(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
     case "startGame":
       console.log(`${message}, startgame switch case has been triggered`)
-      clientWs.send(startGameMessage(message));
-      //TODO a function all to see if n initialization messages have been recieved
+      sendToAllClients(startGameMessage(message));
       startSession();
       break;
     case "initialization":
@@ -89,7 +88,7 @@ function handleClientEvent(senderWs, message) {
       onCharacterMoveRoll(message.result)
 
     default:
-      clientWs.send(generalMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      console.log(`event handling failed, ${message.event} does not exist`)
       break;
   }
 }
