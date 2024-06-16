@@ -90,9 +90,15 @@ function handleClientEvent(senderWs, message) {
       break;
 
     case "interruptStartFightAgainstPlayer":
-      let player1Id = message.player1Id
-      let player2Id = message.player2Id
+      let player1Id = message.player1ID
+      let player2Id = message.player2ID
       onPlayerFightInterrupt(player1Id, player2Id)
+      break;
+
+    case "interruptStartFightAgainstRandom":
+      let playerId = message.playerID
+      let creatureTemplateId = message.creatureTemplateId
+      onPVEInterrupt(playerId, creatureTemplateId)
       break;
 
     case "readyToFight":
@@ -178,6 +184,17 @@ function onPlayerFightInterrupt(player1Id, player2Id){
 
 function sendStartFightSignal(player1Id, player2Id){
   let message = createStartFightMessage(player1Id, player2Id)
+  sendToAllClients(message)
+}
+
+function onPVEInterrupt(playerID, creatureTemplateId){
+  if(setReady()){
+    sendStartPVEFightSignal(playerID, creatureTemplateId)
+  }
+}
+
+function sendStartPVEFightSignal(playerID, creatureTemplateId){
+  let message = createPVEStartFightMessage(playerID, creatureTemplateId)
   sendToAllClients(message)
 }
 
@@ -428,6 +445,14 @@ function createStartFightMessage(fighter1Id, fighter2Id){
     event: "startFightBetweenPlayers",
     fighter1:fighter1Id,
     fighter2:fighter2Id
+  })
+}
+
+function createPVEStartFightMessage(fighterId, creatureTemplateId){
+  return JSON.stringify({
+    event: "startPVEFight",
+    fighter:fighterId,
+    creatureTemplate:creatureTemplateId
   })
 }
 
