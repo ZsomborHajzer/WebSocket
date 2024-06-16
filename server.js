@@ -62,7 +62,7 @@ function handleMessage(ws, message) {
     notifyAllClientsExcept(ws, connectMessage(ws.id, ws.username, ws.role));
     return;
   }
-  handleClientEvent()
+  handleClientEvent(ws, message)
 }
 
 function handleClientEvent(senderWs, message) {
