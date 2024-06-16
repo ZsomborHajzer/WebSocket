@@ -12,6 +12,8 @@ let currentClientIndex = 0
 let clientsReady = 0
 let creatureIndex = 0
 
+let currentBattle = []
+
 wss.on('connection', function connection(ws) {
   const clientId = uuidv4();
   ws.id = clientId; // Assign a unique id to the WebSocket connection
@@ -113,6 +115,10 @@ function handleClientEvent(senderWs, message) {
       onFinishedAttack(message)
       break;
 
+    case "fightSwitchedTeams":
+      onSwitchedTeams()
+      break;
+
     default:
       console.log(`event handling failed, ${message.event} does not exist`)
       break;
@@ -178,6 +184,7 @@ function onPlayerFightInterrupt(player1Id, player2Id){
       player1Id = player2Id
       player2Id = store
     }
+    currentBattle = [player1Id, player2Id]
     sendStartFightSignal(player1Id, player2Id)
   }
 }
@@ -189,6 +196,7 @@ function sendStartFightSignal(player1Id, player2Id){
 
 function onPVEInterrupt(playerID, creatureTemplateId){
   if(setReady()){
+    currentBattle = [player1Id, ""]
     sendStartPVEFightSignal(playerID, creatureTemplateId)
   }
 }
@@ -209,18 +217,32 @@ function cycleAttack(){
 }
 
 function sendCreatureAttackRequest(creatureIndex){
-  createCreatureAttackRequest(creatureIndex)
+  if(currentBattle[0] != ""){ // if it's a player
+    let message = createCreatureAttackRequest(creatureIndex)
+    clients[currentBattle[0]].send(message)
+  }
+  else {
+    message = createSimplifiedCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random*7))
+    sendToAllClients(message)
+  }
 }
 
 function onCreatureAttack(message){
-  let modMessage = createCreatureAttackMessage(message)
+  let modMessage = createCreatureAttackMessageFromMessage(message)
   sendToAllClients(modMessage)
 }
 
 function onFinishedAttack(message){
   if(setReady()){
     // we're going to handle dead creature logic in app
-    if(message.hasNextCreature == false){
+    if(message.teamWonId != ""){
+      let winnerIndex = currentBattle.findIndex()
+      if(winnerIndex == -1){
+        throw new Error(`winnerIndex of ${message.teamWonId} does not exist`)
+      }
+      sendEndBattleMessage(winnerIndex)
+    }
+    else if(message.hasNextCreature == false){
       sendSwitchTeamsMessage()
       creatureIndex = 0
     }
@@ -231,8 +253,19 @@ function onFinishedAttack(message){
   }
 }
 
+function sendEndBattleMessage(winnerIndex){
+  let message = createEndBattleMessage(winnerIndex)
+  sendToAllClients(message)
+}
+
 function sendSwitchTeamsMessage(){
   sendToAllClients(createSwitchTeamsMessage())
+}
+
+function onSwitchedTeams(){
+  if(setReady()){
+    cycleAttack
+  }
 }
 
 // === common ===
@@ -463,7 +496,7 @@ function createCreatureAttackRequest(creatureIndex){
   })
 }
 
-function createCreatureAttackMessage(message){
+function createCreatureAttackMessageFromMessage(message){
   return JSON.stringify({
     event: message.event,
     attackingCreatureId: message.attackingCreatureId,
@@ -474,9 +507,26 @@ function createCreatureAttackMessage(message){
   });
 }
 
+function createSimplifiedCreatureAttackMessage(attackingCreatureIndex, defendingCreatureIndex, attackMoveIndex, chanceModifier){
+  return JSON.stringify({
+    event: "simpleCreatureAttacks",
+    attackingCreatureIndex: attackingCreatureIndex,
+    defendingCreatureIndex: defendingCreatureIndex,
+    attackMoveIndex: attackMoveIndex,
+    chanceModifier: chanceModifier
+  });
+}
+
 function createSwitchTeamsMessage(){
   return JSON.stringify({
     event: "switchTeams"
+  })
+}
+
+function createEndBattleMessage(winningCharacterIndex){
+  return JSON.stringify({
+    event: "endBattle",
+    winningCharacterIndex: winningCharacterIndex
   })
 }
 
