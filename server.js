@@ -77,7 +77,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       endSession(); // End the session when the game ends
       break;
     case "endTurn":
-      autoStartTurn()
+      askToRollMovement()
       break;
     case "moveAction":
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
@@ -92,6 +92,9 @@ function handleClientEvent(senderWs, clientWs, message) {
       onInitializationRequest()
       break;
 
+    case "MovementRollResult":
+      onCharacterMoveRoll(message.result)
+
     default:
       clientWs.send(generalMessage(senderWs.id, senderWs.username, senderWs.role, message));
       break;
@@ -103,26 +106,51 @@ function onInitializationRequest(){
   clientsInitialized++
   console.log(`Clients Initialized = ${clientsInitialized}, Clients.size = ${Object.keys(clients).length} `)
   if(clientsInitialized == Object.keys(clients).length){
-    autoStartTurn();
+    askToRollMovement();
   }
 }
 
+// make player roll dice
+function askToRollMovement() {
+  console.log("askToRollMovement Has been Called!!!")
+  sendRollRequestToClient(getCurrentClient())
+}
 
-function autoStartTurn() {
-  console.log("AutoStartTurn Has been Called!!!")
-  sendStartTurnMessage(
-    Object.keys(clients)[currentClientIndex]
+function sendRollRequestToClient(client) {
+  let message = createRollMovementMessage()
+  client.send(message)
+}
+
+// make character move
+function onCharacterMoveRoll(rollResult) {
+  console.log("OnMovementRoll Has been Called!!!")
+  sendCharacterMoveMessage(
+    getCurrentClient(),
+    rollResult
   )
-  currentClientIndex++;
-  if (currentClientIndex >= Object.keys(clients).length) {
-    currentClientIndex = 0;
-  }
+  iterateCurrentClientIndex()
+}
+
+function sendCharacterMoveMessage(clientToMoveId, distance){
+  let message = createCharacterMoveMessage(clientId, distance)
+  sendToAllClients(message)
 }
 
 function sendStartTurnMessage(clientId) {
   console.log(`Creating start turn message from client ${clientId}`);
   let message = createStartTurnMessage(clientId)
   sendToAllClients(message)
+}
+
+function getCurrentClient(){
+  return Object.keys(clients)[currentClientIndex]
+}
+
+function iterateCurrentClientIndex(){
+  currentClientIndex++;
+  if (currentClientIndex >= Object.keys(clients).length) {
+    currentClientIndex = 0;
+  }
 }
 
 function handleDisconnection(ws) {
@@ -291,6 +319,20 @@ function endTurnMessage(id, username, role, message) {
 function createStartTurnMessage(clientId){
   return JSON.stringify({
     event: "startTurn",
+    id: clientId
+  })
+}
+
+function createRollMovementMessage(){
+  return JSON.stringify({
+    event: "rollMovementDice",
+  })
+}
+
+function createCharacterMoveMessage(clientId, distance){
+  return JSON.stringify({
+    event: "moveCharacter",
+    distance: distance,
     id: clientId
   })
 }
