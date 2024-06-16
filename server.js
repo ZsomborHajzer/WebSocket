@@ -77,7 +77,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       endSession(); // End the session when the game ends
       break;
     case "endTurn":
-      clientWs.send(endTurnMessage(senderWs.id, senderWs.username, senderWs.role, message));
+      autoStartTurn()
       break;
     case "moveAction":
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
@@ -123,13 +123,6 @@ function sendStartTurnMessage(clientId) {
   console.log(`Creating start turn message from client ${clientId}`);
   let message = createStartTurnMessage(clientId)
   sendToAllClients(message)
-}
-
-function createStartTurnMessage(clientId){
-  return JSON.stringify({
-    event: "startTurn",
-    id: clientId
-  })
 }
 
 function handleDisconnection(ws) {
@@ -292,4 +285,10 @@ function endTurnMessage(id, username, role, message) {
   });
 }
 
+function createStartTurnMessage(clientId){
+  return JSON.stringify({
+    event: "startTurn",
+    id: clientId
+  })
+}
 
