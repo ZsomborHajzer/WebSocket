@@ -9,7 +9,7 @@ let roles = ["player1", "player2", "player3", "player4"];
 let availableRoles = [...roles]; // Clone the roles array to manage availability
 let sessionActive = false;
 let currentClientIndex = 0
-let clientsInitialized = 0
+let clientsReady = 0
 
 wss.on('connection', function connection(ws) {
   const clientId = uuidv4();
@@ -77,7 +77,7 @@ function handleClientEvent(senderWs, clientWs, message) {
       endSession(); // End the session when the game ends
       break;
     case "endTurn":
-      askToRollMovement()
+      onEndTurn()
       break;
     case "moveAction":
       clientWs.send(moveActionMessage(senderWs.id, senderWs.username, senderWs.role, message));
@@ -103,10 +103,20 @@ function handleClientEvent(senderWs, clientWs, message) {
 
 function onInitializationRequest(){
   console.log("A player has been initialized")
-  clientsInitialized++
-  console.log(`Clients Initialized = ${clientsInitialized}, Clients.size = ${Object.keys(clients).length} `)
-  if(clientsInitialized == Object.keys(clients).length){
+  clientsReady++
+  console.log(`Clients Initialized = ${clientsReady}, Clients.size = ${Object.keys(clients).length} `)
+  if(clientsReady == Object.keys(clients).length){
+    clientsReady = 0
     askToRollMovement();
+  }
+}
+
+function onEndTurn(){
+  console.log("A player is now ready for the next turn")
+  clientsReady++
+  if(clientsReady == Object.keys(clients).length){
+    clientsReady = 0
+    askToRollMovement()
   }
 }
 
@@ -196,7 +206,7 @@ function endSession() {
   sessionActive = false;
   availableRoles = [...roles]; // Reset roles for a new session
   currentClientIndex = 0
-  clientsInitialized = 0
+  clientsReady = 0
   console.log("Session ended and roles reset");
 }
 
