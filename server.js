@@ -122,7 +122,7 @@ function autoStartTurn() {
 function sendStartTurnMessage(clientId) {
   console.log(`Creating start turn message from client ${clientId}`);
   let message = createStartTurnMessage(clientId)
-  notifyAllClients(wss, message)
+  sendToAllClients(message)
 }
 
 function createStartTurnMessage(clientId){
@@ -161,6 +161,12 @@ function notifyAllClientsExcept(excludedWs, message) {
 function notifyAllClients(ws, message) {
   for (let id in clients) {
     handleClientEvent(ws, clients[id], message);
+  }
+}
+
+function sendToAllClients(message) {
+  for (let id in clients){
+    clients[id].send(message)
   }
 }
 
