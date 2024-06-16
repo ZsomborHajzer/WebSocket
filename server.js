@@ -113,26 +113,26 @@ function onInitializationRequest(){
 // make player roll dice
 function askToRollMovement() {
   console.log("askToRollMovement Has been Called!!!")
-  sendRollRequestToClient(getCurrentClient())
+  sendRollRequestToClient(getCurrentClientId())
 }
 
-function sendRollRequestToClient(client) {
+function sendRollRequestToClient(id) {
   let message = createRollMovementMessage()
-  client.send(message)
+  clients[id].send(message)
 }
 
 // make character move
 function onCharacterMoveRoll(rollResult) {
   console.log("OnMovementRoll Has been Called!!!")
   sendCharacterMoveMessage(
-    getCurrentClient(),
+    getCurrentClientId(),
     rollResult
   )
   iterateCurrentClientIndex()
 }
 
 function sendCharacterMoveMessage(clientToMoveId, distance){
-  let message = createCharacterMoveMessage(clientId, distance)
+  let message = createCharacterMoveMessage(clientToMoveId, distance)
   sendToAllClients(message)
 }
 
@@ -142,7 +142,7 @@ function sendStartTurnMessage(clientId) {
   sendToAllClients(message)
 }
 
-function getCurrentClient(){
+function getCurrentClientId(){
   return Object.keys(clients)[currentClientIndex]
 }
 
