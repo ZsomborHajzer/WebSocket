@@ -167,6 +167,8 @@ function sendToAllClients(message) {
 function endSession() {
   sessionActive = false;
   availableRoles = [...roles]; // Reset roles for a new session
+  currentClientIndex = 0
+  clientsInitialized = 0
   console.log("Session ended and roles reset");
 }
 
