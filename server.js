@@ -158,6 +158,7 @@ function notifyAllClients(ws, message) {
 }
 
 function sendToAllClients(message) {
+  console.log(`sending message to all clients: ${message}`)
   for (let id in clients){
     clients[id].send(message)
   }
