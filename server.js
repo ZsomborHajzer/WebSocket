@@ -10,6 +10,7 @@ let availableRoles = [...roles]; // Clone the roles array to manage availability
 let sessionActive = false;
 let currentClientIndex = 0
 let clientsReady = 0
+let creatureIndex = 0
 
 wss.on('connection', function connection(ws) {
   const clientId = uuidv4();
@@ -86,6 +87,25 @@ function handleClientEvent(senderWs, message) {
 
     case "movementRollResult":
       onCharacterMoveRoll(message.result)
+      break;
+
+    case "interruptStartFightAgainstPlayer":
+      let player1Id = message.player1Id
+      let player2Id = message.player2Id
+      onPlayerFightInterrupt(player1Id, player2Id)
+      break;
+
+    case "readyToFight":
+      onPlayerReadyToFight()
+      break;
+
+    case "creatureAttacks":
+      onCreatureAttack(message)
+      break;
+    
+    case "finishedAttack":
+      onFinishedAttack(message)
+      break;
 
     default:
       console.log(`event handling failed, ${message.event} does not exist`)
@@ -95,20 +115,18 @@ function handleClientEvent(senderWs, message) {
 
 function onInitializationRequest(){
   console.log("A player has been initialized")
-  clientsReady++
-  console.log(`Clients Initialized = ${clientsReady}, Clients.size = ${Object.keys(clients).length} `)
-  if(clientsReady == Object.keys(clients).length){
-    clientsReady = 0
+  if(setReady()){
     askToRollMovement();
   }
 }
 
+
+// === TURNS AND MOVEMENT ===
+
 function onEndTurn(){
   console.log("A player is now ready for the next turn")
-  clientsReady++
-  if(clientsReady == Object.keys(clients).length){
-    clientsReady = 0
-    askToRollMovement()
+  if(setReady()){
+    askToRollMovement();
   }
 }
 
@@ -144,6 +162,72 @@ function sendStartTurnMessage(clientId) {
   sendToAllClients(message)
 }
 
+
+// === BATTLES AND FIGHTS ===
+
+function onPlayerFightInterrupt(player1Id, player2Id){
+  if(setReady()){
+    if(Math.floor(Math.random*2)){    // 50% chance that the order gets inverted
+      let store = player1Id
+      player1Id = player2Id
+      player2Id = store
+    }
+    sendStartFightSignal(player1Id, player2Id)
+  }
+}
+
+function sendStartFightSignal(player1Id, player2Id){
+  let message = createStartFightMessage(player1Id, player2Id)
+  sendToAllClients(message)
+}
+
+function onPlayerReadyToFight(){
+  if(setReady()){
+    cycleAttack()
+  }
+}
+
+function cycleAttack(){
+  sendCreatureAttackRequest(this.creatureIndex)
+}
+
+function sendCreatureAttackRequest(creatureIndex){
+  createCreatureAttackRequest(creatureIndex)
+}
+
+function onCreatureAttack(message){
+  let modMessage = createCreatureAttackMessage(message)
+  sendToAllClients(modMessage)
+}
+
+function onFinishedAttack(message){
+  if(setReady()){
+    // we're going to handle dead creature logic in app
+    if(message.hasNextCreature == false){
+      sendSwitchTeamsMessage()
+      creatureIndex = 0
+    }
+    else{
+      cycleAttack()
+      creatureIndex++
+    }
+  }
+}
+
+function sendSwitchTeamsMessage(){
+  sendToAllClients(createSwitchTeamsMessage())
+}
+
+// === common ===
+
+function setReady(){
+  clientsReady++
+  if(clientsReady == Object.keys(clients).length){
+    clientsReady = 0
+    return true
+  }
+  return false
+}
 function getCurrentClientId(){
   return Object.keys(clients)[currentClientIndex]
 }
@@ -336,6 +420,38 @@ function createCharacterMoveMessage(clientId, distance){
     event: "moveCharacter",
     distance: distance,
     id: clientId
+  })
+}
+
+function createStartFightMessage(fighter1Id, fighter2Id){
+  return JSON.stringify({
+    event: "startFightBetweenPlayers",
+    fighter1:fighter1Id,
+    fighter2:fighter2Id
+  })
+}
+
+function createCreatureAttackRequest(creatureIndex){
+  return JSON.stringify({
+    event: "creatureAttackRequest",
+    creature:creatureIndex
+  })
+}
+
+function createCreatureAttackMessage(message){
+  return JSON.stringify({
+    event: message.event,
+    attackingCreatureId: message.attackingCreatureId,
+    defendingCreatureId: message.defendingCreatureId,
+    attackMoveId: message.attackMoveId,
+    chanceModifier: message.chanceModifier,
+    timeStamp: message.timeStamp
+  });
+}
+
+function createSwitchTeamsMessage(){
+  return JSON.stringify({
+    event: "switchTeams"
   })
 }
 
