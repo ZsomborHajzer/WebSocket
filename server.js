@@ -257,7 +257,7 @@ function onFinishedAttack(message){
 
 function sendCreatureDiedMessage(){
   let message = createCreatureDiedMessage()
-  sendToAllClients(creatureDied)
+  sendToAllClients(message)
 }
 
 function sendEndBattleMessage(winnerIndex){
