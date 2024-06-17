@@ -239,7 +239,7 @@ function onFinishedAttack(message){
   if(setReady()){
     // we're going to handle dead creature logic in app
     if(message.teamWonIndex != -1){
-      sendEndBattleMessage(winnerIndex)
+      sendEndBattleMessage(teamWonIndex)
     }
     else if(message.creatureDied){
       sendCreatureDiedMessage()
