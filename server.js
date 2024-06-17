@@ -236,11 +236,7 @@ function onCreatureAttack(message){
 function onFinishedAttack(message){
   if(setReady()){
     // we're going to handle dead creature logic in app
-    if(message.teamWonId != ""){
-      let winnerIndex = currentBattle.findIndex()
-      if(winnerIndex == -1){
-        throw new Error(`winnerIndex of ${message.teamWonId} does not exist`)
-      }
+    if(message.teamWonIndex != -1){
       sendEndBattleMessage(winnerIndex)
     }
     else if(message.hasNextCreature == false){
