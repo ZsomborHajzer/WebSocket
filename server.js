@@ -219,6 +219,7 @@ function cycleAttack(){
 function sendCreatureAttackRequest(creatureIndex){
   if(currentBattle[0] != ""){ // if it's a player
     let message = createCreatureAttackRequest(creatureIndex)
+    console.log(message)
     clients[currentBattle[0]].send(message)
   }
   else {
