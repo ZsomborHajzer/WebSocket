@@ -241,6 +241,9 @@ function onFinishedAttack(message){
     if(message.teamWonIndex != -1){
       sendEndBattleMessage(winnerIndex)
     }
+    else if(message.creatureDied){
+      sendCreatureDiedMessage()
+    }
     else if(message.hasNextCreature == false){
       sendSwitchTeamsMessage()
       creatureIndex = 0
@@ -250,6 +253,11 @@ function onFinishedAttack(message){
       creatureIndex++
     }
   }
+}
+
+function sendCreatureDiedMessage(){
+  let message = createCreatureDiedMessage()
+  sendToAllClients(creatureDied)
 }
 
 function sendEndBattleMessage(winnerIndex){
@@ -266,6 +274,7 @@ function onSwitchedTeams(){
     cycleAttack
   }
 }
+
 
 // === common ===
 
@@ -518,6 +527,12 @@ function createCreatureAttackMessage(attackingCreatureIndex, defendingCreatureIn
 function createSwitchTeamsMessage(){
   return JSON.stringify({
     event: "switchTeams"
+  })
+}
+
+function createCreatureDiedMessage(){
+  return JSON.stringify({
+    event: "creatureDied"
   })
 }
 
