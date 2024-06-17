@@ -196,7 +196,7 @@ function sendStartFightSignal(player1Id, player2Id){
 
 function onPVEInterrupt(playerID, creatureTemplateId){
   if(setReady()){
-    currentBattle = [player1Id, ""]
+    currentBattle = [playerID, ""]
     sendStartPVEFightSignal(playerID, creatureTemplateId)
   }
 }
