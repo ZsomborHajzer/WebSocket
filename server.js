@@ -213,12 +213,12 @@ function onPlayerReadyToFight(){
 }
 
 function cycleAttack(){
-  sendCreatureAttackRequest(this.creatureIndex)
+  sendCreatureAttackRequest(creatureIndex)
 }
 
 function sendCreatureAttackRequest(creatureIndex){
   if(currentBattle[0] != ""){ // if it's a player
-    let message = createCreatureAttackRequest(creatureIndex.toString())
+    let message = createCreatureAttackRequest(creatureIndex)
     console.log(message)
     clients[currentBattle[0]].send(message)
   }
