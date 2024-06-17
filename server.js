@@ -178,6 +178,7 @@ function sendStartTurnMessage(clientId) {
 // === BATTLES AND FIGHTS ===
 
 function onPlayerFightInterrupt(player1Id, player2Id){
+  creatureIndex = 0
   if(setReady()){
     if(Math.floor(Math.random*2)){    // 50% chance that the order gets inverted
       let store = player1Id
@@ -195,6 +196,7 @@ function sendStartFightSignal(player1Id, player2Id){
 }
 
 function onPVEInterrupt(playerID, creatureTemplateId){
+  creatureIndex = 0
   if(setReady()){
     currentBattle = [playerID, ""]
     sendStartPVEFightSignal(playerID, creatureTemplateId)
