@@ -223,7 +223,7 @@ function sendCreatureAttackRequest(creatureIndex){
     clients[currentBattle[0]].send(message)
   }
   else {
-    message = createSimplifiedCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random*7))
+    message = createCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random*7))
     sendToAllClients(message)
   }
 }
@@ -500,17 +500,16 @@ function createCreatureAttackRequest(creatureIndex){
 function createCreatureAttackMessageFromMessage(message){
   return JSON.stringify({
     event: message.event,
-    attackingCreatureId: message.attackingCreatureId,
-    defendingCreatureId: message.defendingCreatureId,
-    attackMoveId: message.attackMoveId,
-    chanceModifier: message.chanceModifier,
-    timeStamp: message.timeStamp
+    attackingCreatureIndex: message.attackingCreatureIndex,
+    defendingCreatureIndex: message.defendingCreatureIndex,
+    attackMoveIndex: message.attackMoveIndex,
+    chanceModifier: message.chanceModifier
   });
 }
 
-function createSimplifiedCreatureAttackMessage(attackingCreatureIndex, defendingCreatureIndex, attackMoveIndex, chanceModifier){
+function createCreatureAttackMessage(attackingCreatureIndex, defendingCreatureIndex, attackMoveIndex, chanceModifier){
   return JSON.stringify({
-    event: "simpleCreatureAttacks",
+    event: "creatureAttacks",
     attackingCreatureIndex: attackingCreatureIndex,
     defendingCreatureIndex: defendingCreatureIndex,
     attackMoveIndex: attackMoveIndex,
