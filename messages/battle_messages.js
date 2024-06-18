@@ -125,17 +125,7 @@ function cycleAttack(){
   sendCreatureAttackRequest(creatureIndex)
 }
 
-function sendCreatureAttackRequest(creatureIndex){
-  if(currentBattle[0] != ""){ // if it's a player
-    let message = createCreatureAttackRequest(creatureIndex)
-    console.log(message)
-    clients[currentBattle[0]].send(message)
-  }
-  else {
-    message = createCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random*7))
-    sendToAllClients(message)
-  }
-}
+
 
 function onCreatureAttack(message){
   let modMessage = createCreatureAttackMessageFromMessage(message)
