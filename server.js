@@ -567,7 +567,7 @@ return JSON.stringify({
 
 function onInterruptedBySwitchTile(message){
 if(setReady()){
-  sendRequestDirection(message.clientId, message.steps)
+  sendRequestDirection(message.playerID, message.steps)
 }
 }
 
