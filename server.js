@@ -51,7 +51,6 @@ const {
   moveActionMessage,
   endTurnMessage,
   createStartTurnMessage,
-  createCharacterMoveMessage,
   createCharacterMoveMessage
 } = require('./messages/movement_messages')
 
