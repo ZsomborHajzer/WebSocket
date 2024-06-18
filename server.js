@@ -119,7 +119,7 @@ function handleClientEvent(senderWs, message) {
       onSwitchedTeams()
       break;
 
-    case "interruptedBySwitchTile":
+    case "interruptSwitch":
       onInterruptedBySwitchTile(message)
       break;
 
