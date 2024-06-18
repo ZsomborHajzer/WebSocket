@@ -580,7 +580,7 @@ function onChangeDirectionMove(message){
 sendDirectionMoveFromMessage(message)
 }
 function sendDirectionMoveFromMessage(message){
-let directionMessage = directionChangeMessage(message.clientId, message.steps, message.directionIndex)
+let directionMessage = directionChangeMessage(message.id, message.steps, message.directionIndex)
 sendToAllClients(directionMessage)
 }
 
