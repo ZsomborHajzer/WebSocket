@@ -1,47 +1,3 @@
-const {
-  createStartFightMessage,
-  createPVEStartFightMessage,
-  createCreatureAttackRequest,
-  createCreatureAttackMessageFromMessage,
-  createCreatureAttackMessage,
-  createSwitchTeamsMessage,
-  createCreatureDiedMessage,
-  createEndBattleMessage,
-  sendCreatureDiedMessage,
-  sendEndBattleMessage,
-  sendSwitchTeamsMessage,
-  onSwitchedTeams,
-  onPlayerFightInterrupt,
-  sendStartFightSignal,
-  onPVEInterrupt,
-  sendStartPVEFightSignal,
-  onPlayerReadyToFight,
-  cycleAttack,
-  onCreatureAttack,
-  onFinishedAttack
-} = require('./messages/battle_messages')
-
-
-const {
-  onEndTurn,
-  askToRollMovement,
-  sendRollRequestToClient,
-  onCharacterMoveRoll,
-  sendCharacterMoveMessage,
-  sendStartTurnMessage,
-  moveActionMessage,
-  endTurnMessage,
-  createStartTurnMessage,
-  createCharacterMoveMessage,
-  directionRequestMessage,
-  directionChangeMessage,
-  onInterruptedBySwitchTile,
-  sendRequestDirection,
-  onChangeDirectionMove,
-  sendDirectionMoveFromMessage
-} = require('./messages/movement_messages')
-
-
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid'); // Importing UUID generation function
 
@@ -355,11 +311,6 @@ function startGameMessage(message) {
 
 // =============================== Battle Messages =============================================================
 
-
-
-
-
-
 function sendCreatureAttackRequest(creatureIndex){
   if(currentBattle[0] != ""){ // if it's a player
     let message = createCreatureAttackRequest(creatureIndex)
@@ -370,4 +321,329 @@ function sendCreatureAttackRequest(creatureIndex){
     message = createCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random*7))
     sendToAllClients(message)
   }
+}
+
+
+function createStartFightMessage(fighter1Id, fighter2Id){
+  return JSON.stringify({
+    event: "startFightBetweenPlayers",
+    fighter1:fighter1Id,
+    fighter2:fighter2Id
+  })
+}
+
+function createPVEStartFightMessage(fighterId, creatureTemplateId){
+  return JSON.stringify({
+    event: "startPVEFight",
+    fighter:fighterId,
+    creatureTemplate:creatureTemplateId
+  })
+}
+
+function createCreatureAttackRequest(creatureIndex){
+  return JSON.stringify({
+    event: "creatureAttackRequest",
+    creature:creatureIndex
+  })
+}
+
+function createCreatureAttackMessageFromMessage(message){
+  return JSON.stringify({
+    event: message.event,
+    attackingCreatureIndex: message.attackingCreatureIndex,
+    defendingCreatureIndex: message.defendingCreatureIndex,
+    attackMoveIndex: message.attackMoveIndex,
+    chanceModifier: message.chanceModifier
+  });
+}
+
+function createCreatureAttackMessage(attackingCreatureIndex, defendingCreatureIndex, attackMoveIndex, chanceModifier){
+  return JSON.stringify({
+    event: "creatureAttacks",
+    attackingCreatureIndex: attackingCreatureIndex,
+    defendingCreatureIndex: defendingCreatureIndex,
+    attackMoveIndex: attackMoveIndex,
+    chanceModifier: chanceModifier
+  });
+}
+
+function createSwitchTeamsMessage(){
+  return JSON.stringify({
+    event: "switchTeams"
+  })
+}
+
+function createCreatureDiedMessage(){
+  return JSON.stringify({
+    event: "creatureDied"
+  })
+}
+
+function createEndBattleMessage(winningCharacterIndex){
+  return JSON.stringify({
+    event: "endBattle",
+    winningCharacterIndex: winningCharacterIndex
+  })
+}
+
+function sendCreatureDiedMessage(){
+  let message = createCreatureDiedMessage()
+  sendToAllClients(message)
+}
+
+function sendEndBattleMessage(winnerIndex){
+  let message = createEndBattleMessage(winnerIndex)
+  sendToAllClients(message)
+}
+
+function sendSwitchTeamsMessage(){
+  sendToAllClients(createSwitchTeamsMessage())
+}
+
+function onSwitchedTeams(){
+  if(setReady()){
+    cycleAttack
+  }
+}
+
+
+// === BATTLES AND FIGHTS ===
+
+function onPlayerFightInterrupt(player1Id, player2Id){
+creatureIndex = 0
+if(setReady()){
+  if(Math.floor(Math.random*2)){    // 50% chance that the order gets inverted
+    let store = player1Id
+    player1Id = player2Id
+    player2Id = store
+  }
+  currentBattle = [player1Id, player2Id]
+  sendStartFightSignal(player1Id, player2Id)
+}
+}
+
+function sendStartFightSignal(player1Id, player2Id){
+let message = createStartFightMessage(player1Id, player2Id)
+sendToAllClients(message)
+}
+
+function onPVEInterrupt(playerID, creatureTemplateId){
+creatureIndex = 0
+if(setReady()){
+  currentBattle = [playerID, ""]
+  sendStartPVEFightSignal(playerID, creatureTemplateId)
+}
+}
+
+function sendStartPVEFightSignal(playerID, creatureTemplateId){
+let message = createPVEStartFightMessage(playerID, creatureTemplateId)
+sendToAllClients(message)
+}
+
+function onPlayerReadyToFight(){
+if(setReady()){
+  cycleAttack()
+}
+}
+
+function cycleAttack(){
+sendCreatureAttackRequest(creatureIndex)
+}
+
+
+
+function onCreatureAttack(message){
+let modMessage = createCreatureAttackMessageFromMessage(message)
+sendToAllClients(modMessage)
+}
+
+function onFinishedAttack(message){
+if(setReady()){
+  // we're going to handle dead creature logic in app
+  if(message.teamWonIndex != -1){
+    sendEndBattleMessage(message.teamWonIndex)
+  }
+  else if(message.creatureDied){
+    sendCreatureDiedMessage()
+  }
+  else if(message.hasNextCreature == false){
+    sendSwitchTeamsMessage()
+    creatureIndex = 0
+  }
+  else{
+    cycleAttack()
+    creatureIndex++
+  }
+}
+}
+
+
+
+// ========================================= Movement functions and messages ===============================================
+
+function onEndTurn(){
+  console.log("A player is now ready for the next turn")
+  if(setReady()){
+    askToRollMovement();
+  }
+}
+
+// make player roll dice
+function askToRollMovement() {
+  console.log("askToRollMovement Has been Called!!!")
+  sendRollRequestToClient(getCurrentClientId())
+}
+
+function sendRollRequestToClient(id) {
+  let message = createRollMovementMessage()
+  clients[id].send(message)
+}
+
+// make character move
+function onCharacterMoveRoll(rollResult) {
+  console.log("OnMovementRoll Has been Called!!!")
+  sendCharacterMoveMessage(
+    getCurrentClientId(),
+    rollResult
+  )
+  iterateCurrentClientIndex()
+}
+
+function sendCharacterMoveMessage(clientToMoveId, distance){
+  let message = createCharacterMoveMessage(clientToMoveId, distance)
+  sendToAllClients(message)
+}
+
+function sendStartTurnMessage(clientId) {
+  console.log(`Creating start turn message from client ${clientId}`);
+  let message = createStartTurnMessage(clientId)
+  sendToAllClients(message)
+}
+
+function moveActionMessage(id, username, role, message) {
+console.log(`Creating move action message from client ${id}`);
+return JSON.stringify({
+  event: message.event,
+  username: username,
+  id: id,
+  role: role,
+  fromPosition: message.fromPosition,
+  toPosition: message.toPosition,
+  timeStamp: message.timeStamp
+});
+}
+
+function endTurnMessage(id, username, role, message) {
+console.log(`Creating end turn message from client ${id}`);
+return JSON.stringify({
+  event: message.event,
+  username: username,
+  id: id,
+  role: role,
+  timeStamp: message.timeStamp
+});
+}
+
+function createStartTurnMessage(clientId){
+return JSON.stringify({
+  event: "startTurn",
+  id: clientId
+})
+}
+
+function createRollMovementMessage(){
+return JSON.stringify({
+  event: "rollMovementDice",
+})
+}
+
+function createCharacterMoveMessage(clientId, distance){
+return JSON.stringify({
+  event: "moveCharacter",
+  distance: distance,
+  id: clientId
+})
+}
+
+function onInterruptedBySwitchTile(message){
+if(setReady()){
+  sendRequestDirection(message.clientId, message.steps)
+}
+}
+
+function sendRequestDirection(clientId, steps){
+let message = directionRequestMessage(clientId, steps)
+clients[clientId].send(message)
+}
+
+function onChangeDirectionMove(message){
+sendDirectionMoveFromMessage(message)
+}
+function sendDirectionMoveFromMessage(message){
+let directionMessage = directionChangeMessage(message.clientId, message.steps, message.directionIndex)
+sendToAllClients(directionMessage)
+}
+
+
+
+function moveActionMessage(id, username, role, message) {
+console.log(`Creating move action message from client ${id}`);
+return JSON.stringify({
+  event: message.event,
+  username: username,
+  id: id,
+  role: role,
+  fromPosition: message.fromPosition,
+  toPosition: message.toPosition,
+  timeStamp: message.timeStamp
+});
+}
+
+function endTurnMessage(id, username, role, message) {
+console.log(`Creating end turn message from client ${id}`);
+return JSON.stringify({
+  event: message.event,
+  username: username,
+  id: id,
+  role: role,
+  timeStamp: message.timeStamp
+});
+}
+
+function createStartTurnMessage(clientId){
+return JSON.stringify({
+  event: "startTurn",
+  id: clientId
+})
+}
+
+function createRollMovementMessage(){
+return JSON.stringify({
+  event: "rollMovementDice",
+})
+}
+
+function createCharacterMoveMessage(clientId, distance){
+return JSON.stringify({
+  event: "moveCharacter",
+  distance: distance,
+  id: clientId
+})
+}
+
+function directionRequestMessage(clientId, steps){
+return JSON.stringify({
+  event: "requestDirection",
+  id: clientId,
+  steps: steps,
+})
+}
+
+function directionChangeMessage(clientId, steps, directionIndex){
+return JSON.stringify({
+  event: "changeDirectionMove",
+  id: clientId,
+  steps: steps,
+  directionIndex: directionIndex
+})
 }
