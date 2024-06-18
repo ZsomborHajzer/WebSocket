@@ -132,7 +132,7 @@ function createCharacterMoveMessage(clientId, distance){
   })
 }
 
-  export {
+  module.exports = {
     onEndTurn,
     askToRollMovement,
     sendRollRequestToClient,

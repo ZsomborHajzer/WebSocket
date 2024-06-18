@@ -147,7 +147,7 @@ function onInitializationRequest(){
   }
 
 
-  export {
+  module.exports = {
     onInitializationRequest,
     setReady,
     getCurrentClientId,

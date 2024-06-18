@@ -1,4 +1,4 @@
-import {
+const {
   createStartFightMessage,
   createPVEStartFightMessage,
   createCreatureAttackRequest,
@@ -20,9 +20,9 @@ import {
   sendCreatureAttackRequest,
   onCreatureAttack,
   onFinishedAttack
-} from './messages/battle_messages';
+} = require('./messages/battle_messages')
 
-import {
+const {
   onInitializationRequest,
   setReady,
   getCurrentClientId,
@@ -39,9 +39,9 @@ import {
   disconnectMessage,
   endGameMessage,
   startGameMessage
-} from './messages/system_messages'
+} = require('./messages/system_messages')
 
-import {
+const {
   onEndTurn,
   askToRollMovement,
   sendRollRequestToClient,
@@ -53,7 +53,7 @@ import {
   createStartTurnMessage,
   createCharacterMoveMessage,
   createCharacterMoveMessage
-} from './messages/movement_messages'
+} = require('./messages/movement_messages')
 
 
 const WebSocket = require('ws');

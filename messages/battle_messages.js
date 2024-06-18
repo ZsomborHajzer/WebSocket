@@ -162,7 +162,7 @@ function onFinishedAttack(message){
   }
 }
 
-  export {
+module.exports = {
     createStartFightMessage,
     createPVEStartFightMessage,
     createCreatureAttackRequest,
