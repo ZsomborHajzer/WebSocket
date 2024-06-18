@@ -1,5 +1,7 @@
 // === TURNS AND MOVEMENT ===
 
+const { sendToAllClients, setReady } = require("./system_messages");
+
 function onEndTurn(){
     console.log("A player is now ready for the next turn")
     if(setReady()){
@@ -84,6 +86,24 @@ function createCharacterMoveMessage(clientId, distance){
   })
 }
 
+function onInterruptedBySwitchTile(message){
+  if(setReady()){
+    sendRequestDirection(message.clientId, message.steps)
+  }
+}
+
+function sendRequestDirection(clientId, steps){
+  let message = directionRequestMessage(clientId, steps)
+  clients[clientId].send(message)
+}
+
+function onChangeDirectionMove(message){
+  sendDirectionMoveFromMessage(message)
+}
+function sendDirectionMoveFromMessage(message){
+  let directionMessage = directionChangeMessage(message.clientId, message.steps, message.directionIndex)
+  sendToAllClients(directionMessage)
+}
 
 
 
@@ -132,6 +152,23 @@ function createCharacterMoveMessage(clientId, distance){
   })
 }
 
+function directionRequestMessage(clientId, steps){
+  return JSON.stringify({
+    event: "requestDirection",
+    id: clientId,
+    steps: steps,
+  })
+}
+
+function directionChangeMessage(clientId, steps, directionIndex){
+  return JSON.stringify({
+    event: "changeDirectionMove",
+    id: clientId,
+    steps: steps,
+    directionIndex: directionIndex
+  })
+}
+
   module.exports = {
     onEndTurn,
     askToRollMovement,
@@ -143,5 +180,10 @@ function createCharacterMoveMessage(clientId, distance){
     endTurnMessage,
     createStartTurnMessage,
     createCharacterMoveMessage,
-    createCharacterMoveMessage
+    directionRequestMessage,
+    directionChangeMessage,
+    onInterruptedBySwitchTile,
+    sendRequestDirection,
+    onChangeDirectionMove,
+    sendDirectionMoveFromMessage
   }

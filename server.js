@@ -51,7 +51,13 @@ const {
   moveActionMessage,
   endTurnMessage,
   createStartTurnMessage,
-  createCharacterMoveMessage
+  createCharacterMoveMessage,
+  directionRequestMessage,
+  directionChangeMessage,
+  onInterruptedBySwitchTile,
+  sendRequestDirection,
+  onChangeDirectionMove,
+  sendDirectionMoveFromMessage
 } = require('./messages/movement_messages')
 
 
@@ -174,6 +180,14 @@ function handleClientEvent(senderWs, message) {
 
     case "fightSwitchedTeams":
       onSwitchedTeams()
+      break;
+
+    case "interruptedBySwitchTile":
+      onInterruptedBySwitchTile(message)
+      break;
+
+    case "changeDirectionMove":
+      onChangeDirectionMove(message)
       break;
 
     default:
