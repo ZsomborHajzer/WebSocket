@@ -172,7 +172,6 @@ module.exports = {
     sendStartPVEFightSignal,
     onPlayerReadyToFight,
     cycleAttack,
-    sendCreatureAttackRequest,
     onCreatureAttack,
     onFinishedAttack
   };
