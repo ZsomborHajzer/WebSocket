@@ -47,7 +47,12 @@ import {
   sendRollRequestToClient,
   onCharacterMoveRoll,
   sendCharacterMoveMessage,
-  sendStartTurnMessage
+  sendStartTurnMessage,
+  moveActionMessage,
+  endTurnMessage,
+  createStartTurnMessage,
+  createCharacterMoveMessage,
+  createCharacterMoveMessage
 } from './messages/movement_messages'
 
 
@@ -179,11 +184,6 @@ function handleClientEvent(senderWs, message) {
 }
 
 
-
-
-
-// === common ===
-
 function handleDisconnection(ws) {
   // Notify other clients about the disconnection
   notifyAllClientsExcept(ws, disconnectMessage(ws.id, ws.username, ws.role));
@@ -201,50 +201,7 @@ function handleDisconnection(ws) {
   }
 }
 
-function moveActionMessage(id, username, role, message) {
-  console.log(`Creating move action message from client ${id}`);
-  return JSON.stringify({
-    event: message.event,
-    username: username,
-    id: id,
-    role: role,
-    fromPosition: message.fromPosition,
-    toPosition: message.toPosition,
-    timeStamp: message.timeStamp
-  });
-}
 
-function endTurnMessage(id, username, role, message) {
-  console.log(`Creating end turn message from client ${id}`);
-  return JSON.stringify({
-    event: message.event,
-    username: username,
-    id: id,
-    role: role,
-    timeStamp: message.timeStamp
-  });
-}
-
-function createStartTurnMessage(clientId){
-  return JSON.stringify({
-    event: "startTurn",
-    id: clientId
-  })
-}
-
-function createRollMovementMessage(){
-  return JSON.stringify({
-    event: "rollMovementDice",
-  })
-}
-
-function createCharacterMoveMessage(clientId, distance){
-  return JSON.stringify({
-    event: "moveCharacter",
-    distance: distance,
-    id: clientId
-  })
-}
 
 
 
