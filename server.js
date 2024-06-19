@@ -70,7 +70,7 @@ function handleMessage(ws, message) {
 
 function handleClientEvent(senderWs, message) {
 
-  console.log(`Handling event ${message.event} from client ${senderWs.id}`);
+  console.log(`Handling event ${message.event} from cliesnt ${senderWs.id}`);
   switch (message.event) {
     case "endTurn":
       onEndTurn()
@@ -300,7 +300,8 @@ function startGameMessage(message) {
     listOfClients.push({
       id: clients[id].id,
       username: clients[id].username,
-      role: clients[id].role
+      role: clients[id].role,
+      imageResource: clients[id].imageResource
     })
   }
 
