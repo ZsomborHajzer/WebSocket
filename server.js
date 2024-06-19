@@ -127,6 +127,11 @@ function handleClientEvent(senderWs, message) {
       onChangeDirectionMove(message)
       break;
 
+    case "changedPlayerPortrait":
+      let portraitMessage = createPlayerPortaitMessageFromMessage(message)
+      sendToAllClients(portraitMessage)
+      break;
+
     default:
       console.log(`event handling failed, ${message.event} does not exist`)
       break;
@@ -646,4 +651,12 @@ return JSON.stringify({
   steps: steps,
   directionIndex: directionIndex
 })
+}
+
+function createPlayerPortaitMessageFromMessage(message){
+  return JSON.stringify({
+    event: message.event,
+    player: message.player,
+    imageResource: message.imageResource
+  })
 }
