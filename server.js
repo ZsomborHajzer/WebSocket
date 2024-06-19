@@ -58,6 +58,7 @@ function handleMessage(ws, message) {
 
   if (message.hasOwnProperty("username")) {
     ws.username = message.username;
+    ws.imageResource = message.imageResource;
     console.log(`Client ${ws.id} set username to ${ws.username}`);
     // Notify the newly connected client about their username and role
     ws.send(connectMessage(ws.id, ws.username, ws.role));
