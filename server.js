@@ -129,6 +129,7 @@ function handleClientEvent(senderWs, message) {
 
     case "changedPlayerPortrait":
       let portraitMessage = createPlayerPortaitMessageFromMessage(message)
+      clients[message.player].imageResource = message.imageResource
       sendToAllClients(portraitMessage)
       break;
 
@@ -250,7 +251,8 @@ function currentPlayers(clients, excludeId) {
       currentPlayersMessage.players.push({
         id: clients[id].id,
         username: clients[id].username,
-        role: clients[id].role
+        role: clients[id].role,
+        imageResource: clients[id].imageResource
       });
     }
   }
