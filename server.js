@@ -326,7 +326,7 @@ function sendCreatureAttackRequest(creatureIndex){
     clients[currentBattle[0]].send(message)
   }
   else {
-    message = createCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random*7))
+    message = createCreatureAttackMessage(creatureIndex, creatureIndex, 0, Math.floor(Math.random()*7))
     sendToAllClients(message)
   }
 }
