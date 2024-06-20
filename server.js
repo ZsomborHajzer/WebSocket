@@ -320,7 +320,6 @@ function startGameMessage(message) {
 // =============================== Battle Messages =============================================================
 
 function sendCreatureAttackRequest(creatureIndex){
-  console.log("currentBattle " + currentBattle)
   if(currentBattle[0] != ""){ // if it's a player
     let message = createCreatureAttackRequest(creatureIndex)
     console.log(message)
@@ -476,6 +475,7 @@ if(setReady()){
     sendCreatureDiedMessage()
   }
   else if(message.hasNextCreature == false){
+    currentBattle.reverse()
     sendSwitchTeamsMessage()
     creatureIndex = 0
   }
